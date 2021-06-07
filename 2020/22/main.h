@@ -14,3 +14,7 @@ using std::string;
 using std::vector;
 
 std::pair<vector<int>, vector<int>> getPlayerCards(string filename);
+
+void simulateGame(std::pair<vector<int>, vector<int>>& playerCards);
+
+int calculateScore(vector<int> cards);
