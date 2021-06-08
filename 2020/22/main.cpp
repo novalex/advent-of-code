@@ -21,7 +21,8 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	simulateGame(playerCards);
+	vector<uint32_t> previousGameHashes;
+	simulateGame(playerCards, previousGameHashes);
 
 	vector<int> winningCards;
 
@@ -72,7 +73,19 @@ pair<vector<int>, vector<int>> getPlayerCards(string filename) {
 	return std::make_pair(player1Cards, player2Cards);
 }
 
-void simulateGame(std::pair<vector<int>, vector<int>>& playerCards) {
+void simulateGame(std::pair<vector<int>, vector<int>>& playerCards, vector<uint32_t>& previousGameHashes) {
+	// Check sudden death condition.
+	auto hash1 = hashVectorInt(playerCards.first);
+	auto hash2 = hashVectorInt(playerCards.second);
+	auto gameHash = hash1 ^ hash2;
+	if (previousGameHashes.size() && *find(previousGameHashes.begin(), previousGameHashes.end(), gameHash) == gameHash) {
+		cout << "Player 1 wins game by sudden death." << endl;
+		playerCards.first.assign(1, 1);
+		playerCards.second.assign(0, 0);
+		return;
+	}
+	previousGameHashes.push_back(gameHash);
+
 	vector<int> player1Cards = playerCards.first;
 	vector<int> player2Cards = playerCards.second;
 	bool gameOver = false;
@@ -99,6 +112,15 @@ void simulateGame(std::pair<vector<int>, vector<int>>& playerCards) {
 
 	playerCards.first = player1Cards;
 	playerCards.second = player2Cards;
+}
+
+std::size_t hashVectorInt(vector<int> vec) {
+	std::sort(vec.begin(), vec.end());
+	std::size_t seed = vec.size();
+	for (auto& i : vec) {
+		seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+	return seed;
 }
 
 int calculateScore(vector<int> cards) {
